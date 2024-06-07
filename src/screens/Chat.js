@@ -131,12 +131,12 @@ export default function Chat({ route }) {
                 paddingRight: 10,
               }}
             >
-              <TouchableOpacity>
+              {/* <TouchableOpacity>
                 <Icon name="call" size={24} color="black" />
               </TouchableOpacity>
               <TouchableOpacity>
                 <Icon name="videocam" size={24} color="black" />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
           </View>
         </View>

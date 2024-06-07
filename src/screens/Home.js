@@ -14,10 +14,12 @@ import { useContext, useEffect, useState } from "react";
 import { AuthConstext } from "../context/AuthProvider";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebase.config";
+import { useTheme } from '../context/ThemeProvider';
 export default function Home({ navigation }) {
   const { logOut, user, currentUser } = useContext(AuthConstext);
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
+  const { theme } = useTheme();
 
   const logOuthandler = async () => {
     try {
@@ -44,8 +46,8 @@ export default function Home({ navigation }) {
   }, []);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={styles.container}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.backgroundColor }}>
+      <View style={[styles.container, { backgroundColor: theme.backgroundColor }]}>
         {/*================ header ====================*/}
         <View style={styles.header}>
           <View style={styles.headerBox}>
@@ -57,10 +59,10 @@ export default function Home({ navigation }) {
               />
             </View>
             <View style={styles.headerText}>
-              <Text style={styles.title}>{currentUser?.name}</Text>
-              <Text style={styles.text}>{currentUser?.address}</Text>
-              <Text style={styles.text}>{currentUser?.gender}</Text>
-              <Text style={styles.text}>{currentUser?.email}</Text>
+              <Text style={[styles.title, { color: theme.textColor }]}>{currentUser?.name}</Text>
+              <Text style={[styles.text, { color: theme.textColor }]}>{currentUser?.address}</Text>
+              <Text style={[styles.text, { color: theme.textColor }]}>{currentUser?.gender}</Text>
+              <Text style={[styles.text, { color: theme.textColor }]}>{currentUser?.email}</Text>
               <View style={{ marginVertical: 10 }}>
                 <ProfileButton
                   onPress={logOuthandler}
@@ -80,7 +82,8 @@ export default function Home({ navigation }) {
               paddingTop: 20,
             }}
           >
-            <ProfileButton bg="#0d0d0d" title="View Profile" />
+            <ProfileButton bg="#0d0d0d" title="View Profile" onPress={() => navigation.navigate('Profile')} />
+
             <ProfileButton title="Add User" />
           </View>
         </View>

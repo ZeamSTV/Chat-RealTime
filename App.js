@@ -5,19 +5,24 @@ import Home from "./src/screens/Home";
 import Chat from "./src/screens/Chat";
 import Login from "./src/screens/Login";
 import Signup from "./src/screens/Signup";
+import Profile from "./src/screens/Profile";
 import AuthProvider, { AuthConstext } from "./src/context/AuthProvider";
 import { useContext } from "react";
 import { ChatProvider } from "./src/context/ChatContext";
+import { ThemeProvider } from "./src/context/ThemeProvider";
+
 export default function App() {
   return (
-    <NavigationContainer>
-      <StatusBar backgroundColor="orange" barStyle="light-content" />
-      <AuthProvider>
-        <ChatProvider>
-          <Root />
-        </ChatProvider>
-      </AuthProvider>
-    </NavigationContainer>
+    <ThemeProvider>
+      <NavigationContainer>
+        <StatusBar backgroundColor="orange" barStyle="light-content" />
+        <AuthProvider>
+          <ChatProvider>
+            <Root />
+          </ChatProvider>
+        </AuthProvider>
+      </NavigationContainer>
+    </ThemeProvider>
   );
 }
 
@@ -34,6 +39,7 @@ const Root = () => {
         <>
           <Stack.Screen name="Home" component={Home} />
           <Stack.Screen name="Chat" component={Chat} />
+          <Stack.Screen name="Profile" component={Profile} />
         </>
       ) : (
         <>
