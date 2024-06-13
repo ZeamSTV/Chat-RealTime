@@ -1,3 +1,4 @@
+import React, { useContext, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,20 +7,23 @@ import {
   Image,
   ScrollView,
   Alert,
+  TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ProfileButton from "../components/ProfileButton";
 import UserList from "../components/UserList";
-import { useContext, useEffect, useState } from "react";
 import { AuthConstext } from "../context/AuthProvider";
-import { collection, onSnapshot } from "firebase/firestore";
+import { onSnapshot, collection, doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/firebase.config";
 import { useTheme } from '../context/ThemeProvider';
+
 export default function Home({ navigation }) {
-  const { logOut, user, currentUser } = useContext(AuthConstext);
+  const { logOut, user, currentUser, acceptFriendRequest, friends } = useContext(AuthConstext);
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
+  const [friendRequests, setFriendRequests] = useState([]);
   const { theme } = useTheme();
+  const [friendData, setFriendData] = useState([]); // State to store friend data
 
   const logOuthandler = async () => {
     try {
@@ -42,8 +46,35 @@ export default function Home({ navigation }) {
       setUsers(usersData);
     });
 
+    if (currentUser?.friendRequests) {
+      setFriendRequests(currentUser.friendRequests);
+    }
+
     return () => unsubscribe();
-  }, []);
+  }, [currentUser]);
+
+  useEffect(() => {
+    const fetchFriendData = async () => {
+      const friendInfo = [];
+
+      for (const friendId of friends) {
+        const friendDocRef = doc(db, "users", friendId);
+        const friendSnapshot = await getDoc(friendDocRef);
+        const friend = friendSnapshot.data();
+        friendInfo.push(friend);
+      }
+
+      setFriendData(friendInfo);
+    };
+
+    fetchFriendData();
+  }, [friends]); // Fetch friend data whenever friends change
+
+  const handleAcceptFriendRequest = async (requestUserId) => {
+    await acceptFriendRequest(requestUserId);
+    setFriendRequests((prevRequests) => prevRequests.filter(id => id !== requestUserId)); // Remove the accepted friend request from the list
+    alert("Friend request accepted!");
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.backgroundColor }}>
@@ -84,25 +115,39 @@ export default function Home({ navigation }) {
           >
             <ProfileButton bg="#0d0d0d" title="View Profile" onPress={() => navigation.navigate('Profile')} />
 
-            <ProfileButton title="Add User" />
+            <ProfileButton title="Friend List" />
           </View>
         </View>
+
+        {/*============== Friend Requests =======================*/}
+        <View style={{ paddingVertical: 5 }}>
+          <Text style={[styles.title, { color: theme.textColor }]}>Friend Requests</Text>
+          {friendRequests.length > 0 ? (
+            friendRequests.map((requestId) => {
+              const requester = users.find((user) => user.id === requestId);
+              return (
+                <View key={requestId} style={styles.friendRequest}>
+                  <Text style={{ color: theme.textColor }}>{requester?.name}</Text>
+                  <TouchableOpacity onPress={() => handleAcceptFriendRequest(requestId)}>
+                    <Text style={{ color: "blue" }}>Accept</Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            })
+          ) : (
+            <Text style={{ color: theme.textColor }}>No friend requests</Text>
+          )}
+        </View>
+
         {/*============== User List =======================*/}
-        <View
-          style={{
-            height: "auto",
-            flex: 1,
-            paddingVertical: 5,
-          }}
-        >
+        <View style={{ flex: 1, paddingVertical: 5 }}>
           <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
             {users &&
               users.map((x) => (
-                <View key={x?.userId}>
+                <View key={x?.id}>
                   <UserList users={x} />
                 </View>
               ))}
-            {/* <UserList users={users} /> */}
           </ScrollView>
         </View>
         {/*================ header ====================*/}
@@ -111,6 +156,7 @@ export default function Home({ navigation }) {
     </SafeAreaView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -155,5 +201,13 @@ const styles = StyleSheet.create({
   },
   text: {
     color: "black",
+  },
+  friendRequest: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    padding: 10,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 5,
   },
 });

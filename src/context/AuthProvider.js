@@ -1,12 +1,7 @@
-import {
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut,
-} from "firebase/auth";
-import React, { createContext, useEffect, useState } from "react";
+import { arrayUnion, updateDoc, doc, arrayRemove, onSnapshot } from "firebase/firestore";
+import { createContext, useEffect, useState } from "react";
 import { db, firebaseAuth } from "../firebase/firebase.config";
-import { doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
 
 export const AuthConstext = createContext(null);
 
@@ -14,6 +9,7 @@ export default function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [friends, setFriends] = useState([]); // Added friends state
 
   const createUser = (email, password) => {
     return createUserWithEmailAndPassword(firebaseAuth, email, password);
@@ -32,6 +28,32 @@ export default function AuthProvider({ children }) {
       const userDocRef = doc(db, "users", user.uid);
       await updateDoc(userDocRef, userInfo);
       setCurrentUser((prev) => ({ ...prev, ...userInfo }));
+    }
+  };
+
+  const acceptFriendRequest = async (requestUserId) => {
+    if (user) {
+      const userDocRef = doc(db, "users", user.uid);
+      const requestUserDocRef = doc(db, "users", requestUserId);
+
+      // Add the requester to the user's friends list
+      await updateDoc(userDocRef, {
+        friends: arrayUnion(requestUserId),
+        friendRequests: arrayRemove(requestUserId),
+      });
+
+      // Add the user to the requester's friends list
+      await updateDoc(requestUserDocRef, {
+        friends: arrayUnion(user.uid),
+      });
+
+      // Update the current user and friends state
+      setFriends((prev) => [...prev, requestUserId]);
+      setCurrentUser((prev) => ({
+        ...prev,
+        friends: [...(prev.friends || []), requestUserId],
+        friendRequests: (prev.friendRequests || []).filter((id) => id !== requestUserId),
+      }));
     }
   };
 
@@ -55,9 +77,12 @@ export default function AuthProvider({ children }) {
       const userDocRef = doc(db, "users", user.uid);
       const unsubscribe = onSnapshot(userDocRef, (doc) => {
         if (doc.exists()) {
-          setCurrentUser({ id: doc.id, ...doc.data() });
+          const userData = doc.data();
+          setCurrentUser({ id: doc.id, ...userData });
+          setFriends(userData.friends || []);
         } else {
           setCurrentUser(null);
+          setFriends([]);
         }
       });
 
@@ -72,7 +97,9 @@ export default function AuthProvider({ children }) {
     isAuthenticated,
     logOut,
     currentUser,
-    updateUser, // Add updateUser to the context
+    updateUser,
+    acceptFriendRequest, // Export the function
+    friends,
   };
 
   return (

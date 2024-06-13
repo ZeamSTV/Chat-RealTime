@@ -40,6 +40,7 @@ const Root = () => {
           <Stack.Screen name="Home" component={Home} />
           <Stack.Screen name="Chat" component={Chat} />
           <Stack.Screen name="Profile" component={Profile} />
+
         </>
       ) : (
         <>

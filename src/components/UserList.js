@@ -1,12 +1,19 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
-import { Icon } from 'react-native-elements'; // Import Icon from react-native-elements
+import { Icon } from 'react-native-elements';
 import { useNavigation } from "@react-navigation/native";
+import { useContext } from "react";
+import { AuthConstext } from "../context/AuthProvider"; // Adjust the import if necessary
 
 export default function UserList({ users }) {
   const navigation = useNavigation();
+  const { sendFriendRequest } = useContext(AuthConstext);
 
   const chatHandler = () => {
     navigation.navigate("Chat", { users });
+  };
+
+  const handleSendFriendRequest = () => {
+    sendFriendRequest(users.id);
   };
 
   return (
@@ -20,7 +27,7 @@ export default function UserList({ users }) {
               resizeMode="contain"
             />
           </View>
-          <Text style={{ fontSize: 18, fontWeight: "bold" }}>  {/* Wrap name in <Text> */}
+          <Text style={{ fontSize: 18, fontWeight: "bold" }}>
             {users?.name}
           </Text>
         </View>
@@ -31,7 +38,7 @@ export default function UserList({ users }) {
             <Icon raised reverse name='pencil' type='font-awesome' color="#000" />
           </View>
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={handleSendFriendRequest}>
           <View style={styles.iconButton}>
             <Icon name='user-plus' type='font-awesome' color="black" />
           </View>
@@ -70,6 +77,5 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: "center",
     justifyContent: "center",
-
   },
 });
