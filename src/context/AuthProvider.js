@@ -31,6 +31,18 @@ export default function AuthProvider({ children }) {
     }
   };
 
+  const sendFriendRequest = async (requestUserId) => {
+    if (user) {
+      const userDocRef = doc(db, "users", user.uid);
+      const requestUserDocRef = doc(db, "users", requestUserId);
+
+      // Add the user's ID to the request user's friend requests list
+      await updateDoc(requestUserDocRef, {
+        friendRequests: arrayUnion(user.uid),
+      });
+    }
+  };
+
   const acceptFriendRequest = async (requestUserId) => {
     if (user) {
       const userDocRef = doc(db, "users", user.uid);
@@ -98,6 +110,7 @@ export default function AuthProvider({ children }) {
     logOut,
     currentUser,
     updateUser,
+    sendFriendRequest, // Export the function
     acceptFriendRequest, // Export the function
     friends,
   };
