@@ -115,7 +115,7 @@ export default function Home({ navigation }) {
           >
             <ProfileButton bg="#0d0d0d" title="View Profile" onPress={() => navigation.navigate('Profile')} />
 
-            <ProfileButton title="Friend List" />
+            <ProfileButton title="Friend List" onPress={() => navigation.navigate('FriendList')} />
           </View>
         </View>
 

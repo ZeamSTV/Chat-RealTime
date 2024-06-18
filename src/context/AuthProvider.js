@@ -69,6 +69,7 @@ export default function AuthProvider({ children }) {
     }
   };
 
+
   useEffect(() => {
     const unSubscribe = onAuthStateChanged(firebaseAuth, (curtUser) => {
       if (curtUser) {

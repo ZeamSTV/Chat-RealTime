@@ -6,6 +6,7 @@ import Chat from "./src/screens/Chat";
 import Login from "./src/screens/Login";
 import Signup from "./src/screens/Signup";
 import Profile from "./src/screens/Profile";
+import FriendList from "./src/screens/FriendList";
 import AuthProvider, { AuthConstext } from "./src/context/AuthProvider";
 import { useContext } from "react";
 import { ChatProvider } from "./src/context/ChatContext";
@@ -40,6 +41,7 @@ const Root = () => {
           <Stack.Screen name="Home" component={Home} />
           <Stack.Screen name="Chat" component={Chat} />
           <Stack.Screen name="Profile" component={Profile} />
+          <Stack.Screen name="FriendList" component={FriendList} />
 
         </>
       ) : (
