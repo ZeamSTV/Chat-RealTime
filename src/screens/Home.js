@@ -1,14 +1,5 @@
 import React, { useContext, useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  StatusBar,
-  Image,
-  ScrollView,
-  Alert,
-  TouchableOpacity,
-} from "react-native";
+import { View, Text, StyleSheet, StatusBar, Image, ScrollView, Alert, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ProfileButton from "../components/ProfileButton";
 import UserList from "../components/UserList";
@@ -16,6 +7,8 @@ import { AuthConstext } from "../context/AuthProvider";
 import { onSnapshot, collection, doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/firebase.config";
 import { useTheme } from '../context/ThemeProvider';
+import * as ImagePicker from 'expo-image-picker';
+import { uploadImage } from "../firebase/firebaseStorage";
 
 export default function Home({ navigation }) {
   const { logOut, user, currentUser, acceptFriendRequest, friends } = useContext(AuthConstext);
@@ -23,13 +16,13 @@ export default function Home({ navigation }) {
   const [users, setUsers] = useState([]);
   const [friendRequests, setFriendRequests] = useState([]);
   const { theme } = useTheme();
-  const [friendData, setFriendData] = useState([]); // State to store friend data
+  const [friendData, setFriendData] = useState([]);
 
-  const logOuthandler = async () => {
+  const logOutHandler = async () => {
     try {
       setLoading(true);
       await logOut();
-      Alert.alert("Log out", "Log out successfully!");
+      Alert.alert("Log out", "Logged out successfully!");
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -68,26 +61,57 @@ export default function Home({ navigation }) {
     };
 
     fetchFriendData();
-  }, [friends]); // Fetch friend data whenever friends change
+  }, [friends]);
 
   const handleAcceptFriendRequest = async (requestUserId) => {
     await acceptFriendRequest(requestUserId);
-    setFriendRequests((prevRequests) => prevRequests.filter(id => id !== requestUserId)); // Remove the accepted friend request from the list
+    setFriendRequests((prevRequests) => prevRequests.filter(id => id !== requestUserId));
     alert("Friend request accepted!");
   };
+
+  const selectImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      alert("Permission to access camera roll is required!");
+      return;
+    }
+
+    const pickerResult = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (!pickerResult.cancelled) {
+      console.log('Selected image URI: ', pickerResult.uri);
+      try {
+        const downloadURL = await uploadImage(pickerResult.uri, currentUser.uid);
+        console.log('Download URL: ', downloadURL);
+        Alert.alert("Success", "Avatar updated successfully!");
+      } catch (error) {
+        console.error('Error selecting image or uploading: ', error);
+        Alert.alert("Error", "Failed to update avatar.");
+      }
+    } else {
+      console.log('User cancelled image selection');
+    }
+  };
+  
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.backgroundColor }}>
       <View style={[styles.container, { backgroundColor: theme.backgroundColor }]}>
-        {/*================ header ====================*/}
         <View style={styles.header}>
           <View style={styles.headerBox}>
             <View style={styles.imgContainer}>
-              <Image
-                source={require("../img/account.jpg")}
-                style={styles.img}
-                resizeMode="contain"
-              />
+              <TouchableOpacity onPress={selectImage}>
+                <Image
+                  source={currentUser?.avatar ? { uri: currentUser.avatar } : require("../img/account.jpg")}
+                  style={styles.img}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
             </View>
             <View style={styles.headerText}>
               <Text style={[styles.title, { color: theme.textColor }]}>{currentUser?.name}</Text>
@@ -96,7 +120,7 @@ export default function Home({ navigation }) {
               <Text style={[styles.text, { color: theme.textColor }]}>{currentUser?.email}</Text>
               <View style={{ marginVertical: 10 }}>
                 <ProfileButton
-                  onPress={logOuthandler}
+                  onPress={logOutHandler}
                   title={loading ? "Loading..." : "Log out"}
                   bg="#bb180a"
                   disabled={loading}
@@ -119,7 +143,6 @@ export default function Home({ navigation }) {
           </View>
         </View>
 
-        {/*============== Friend Requests =======================*/}
         <View style={{ paddingVertical: 5 }}>
           <Text style={[styles.title, { color: theme.textColor }]}>Friend Requests</Text>
           {friendRequests.length > 0 ? (
@@ -139,7 +162,6 @@ export default function Home({ navigation }) {
           )}
         </View>
 
-        {/*============== User List =======================*/}
         <View style={{ flex: 1, paddingVertical: 5 }}>
           <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
             {users &&
@@ -150,7 +172,6 @@ export default function Home({ navigation }) {
               ))}
           </ScrollView>
         </View>
-        {/*================ header ====================*/}
         <StatusBar style="auto" />
       </View>
     </SafeAreaView>
@@ -162,7 +183,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "white",
     paddingHorizontal: 10,
-    // paddingTop: 10,
     paddingTop: 2,
   },
   header: {
