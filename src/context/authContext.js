@@ -3,11 +3,15 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   onAuthStateChanged,
+  deleteUser,
 } from "firebase/auth";
-import { firebaseAuth, firestoreDB } from "../firebase/firebase.config";
+import { firebaseAuth, firestoreDB, storage } from "../firebase/firebase.config";
 import { useNavigation } from "@react-navigation/native";
 import { getDoc, doc, setDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
 export const AuthContext = createContext();
+
 export const AuthContextProvider = ({ children }) => {
   const navigation = useNavigation();
   const [user, setUser] = useState(null);
@@ -25,41 +29,52 @@ export const AuthContextProvider = ({ children }) => {
     });
     return unSubscribe;
   }, []);
-  const login = async () => {
-    const response = await signInWithEmailAndPassword(
-      firebaseAuth,
-      email,
-      password
-    );
-    console.log("response:", response);
+
+  const login = async (email, password) => {
     try {
-    } catch (error) {}
+      const response = await signInWithEmailAndPassword(firebaseAuth, email, password);
+      console.log("response:", response);
+    } catch (error) {
+      console.error("Error logging in:", error);
+    }
   };
-  const logOut = async (email, password) => {
+
+  const logOut = async () => {
     try {
-    } catch (error) {}
+      await firebaseAuth.signOut();
+      setIsAuthenticated(false);
+      setUser(null);
+      navigation.navigate("Login");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
   };
-  const register = async (name, email, password, gender, address) => {
+
+  const register = async (name, email, password, gender, address, image) => {
     try {
-      const response = await createUserWithEmailAndPassword(
-        firebaseAuth,
-        email,
-        password
-      );
+      const response = await createUserWithEmailAndPassword(firebaseAuth, email, password);
       console.log("response:", response?.user);
 
       if (response?.user) {
-        //   setUser(response?.user);
-        //   setIsAuthenticated(true);
-        await doc(doc(firestoreDB, "users", response?.user.uid), {
+        // Upload image to Firebase Storage
+        const imageRef = ref(storage, `avatars/${response.user.uid}/profile.jpg`);
+        const response = await fetch(image.uri);
+        const blob = await response.blob();
+        await uploadBytes(imageRef, blob);
+        const imageUrl = await getDownloadURL(imageRef);
+
+        // Save user data in Firestore
+        await setDoc(doc(firestoreDB, "users", response.user.uid), {
           name,
           gender,
           address,
-          userId: response?.user.uid,
+          userId: response.user.uid,
+          avatar: imageUrl,  // Save image URL
         });
+
         return {
           success: true,
-          data: response?.user,
+          data: response.user,
           message: "Account created successfully!",
         };
       }
@@ -67,23 +82,35 @@ export const AuthContextProvider = ({ children }) => {
       return {
         success: false,
         data: error.message,
-        message: "Account created failed!",
+        message: "Account creation failed!",
       };
     }
   };
+
+  const deleteAccount = async () => {
+    if (firebaseAuth.currentUser) {
+      try {
+        await deleteUser(firebaseAuth.currentUser);
+        alert("Account deleted successfully!");
+      } catch (error) {
+        alert("Failed to delete account: " + error.message);
+      }
+    }
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated, login, logOut, register }}
+      value={{ user, isAuthenticated, login, logOut, register, deleteAccount }}
     >
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const userAuth = () => {
+export const useAuth = () => {
   const value = useContext(AuthContext);
   if (!value) {
-    throw new Error("UseAuth must be wrapped inside AuthContextProvider");
+    throw new Error("useAuth must be wrapped inside AuthContextProvider");
   }
   return value;
 };
