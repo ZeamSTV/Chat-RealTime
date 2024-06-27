@@ -7,8 +7,8 @@ import { AuthConstext } from "../context/AuthProvider";
 import { onSnapshot, collection, doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/firebase.config";
 import { useTheme } from '../context/ThemeProvider';
-import * as ImagePicker from 'expo-image-picker';
-import { uploadImage } from "../firebase/firebaseStorage";
+// import * as ImagePicker from 'expo-image-picker';
+// import { uploadImage } from "../firebase/firebaseStorage";
 
 export default function Home({ navigation }) {
   const { logOut, user, currentUser, acceptFriendRequest, friends } = useContext(AuthConstext);
@@ -69,34 +69,34 @@ export default function Home({ navigation }) {
     alert("Friend request accepted!");
   };
 
-  const selectImage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  // const selectImage = async () => {
+  //   const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    if (permissionResult.granted === false) {
-      alert("Permission to access camera roll is required!");
-      return;
-    }
+  //   if (permissionResult.granted === false) {
+  //     alert("Permission to access camera roll is required!");
+  //     return;
+  //   }
 
-    const pickerResult = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-    });
+  //   const pickerResult = await ImagePicker.launchImageLibraryAsync({
+  //     mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  //     allowsEditing: true,
+  //     quality: 1,
+  //   });
 
-    if (!pickerResult.cancelled) {
-      console.log('Selected image URI: ', pickerResult.uri);
-      try {
-        const downloadURL = await uploadImage(pickerResult.uri, currentUser.uid);
-        console.log('Download URL: ', downloadURL);
-        Alert.alert("Success", "Avatar updated successfully!");
-      } catch (error) {
-        console.error('Error selecting image or uploading: ', error);
-        Alert.alert("Error", "Failed to update avatar.");
-      }
-    } else {
-      console.log('User cancelled image selection');
-    }
-  };
+  //   if (!pickerResult.cancelled) {
+  //     console.log('Selected image URI: ', pickerResult.uri);
+  //     try {
+  //       const downloadURL = await uploadImage(pickerResult.uri, currentUser.uid);
+  //       console.log('Download URL: ', downloadURL);
+  //       Alert.alert("Success", "Avatar updated successfully!");
+  //     } catch (error) {
+  //       console.error('Error selecting image or uploading: ', error);
+  //       Alert.alert("Error", "Failed to update avatar.");
+  //     }
+  //   } else {
+  //     console.log('User cancelled image selection');
+  //   }
+  // };
   
 
   return (
@@ -105,13 +105,18 @@ export default function Home({ navigation }) {
         <View style={styles.header}>
           <View style={styles.headerBox}>
             <View style={styles.imgContainer}>
-              <TouchableOpacity onPress={selectImage}>
+              {/* <TouchableOpacity onPress={selectImage}>
                 <Image
                   source={currentUser?.avatar ? { uri: currentUser.avatar } : require("../img/account.jpg")}
                   style={styles.img}
                   resizeMode="contain"
                 />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
+              <Image
+                  source={("../img/account.jpg")}
+                  style={styles.img}
+                  resizeMode="contain"
+                />
             </View>
             <View style={styles.headerText}>
               <Text style={[styles.title, { color: theme.textColor }]}>{currentUser?.name}</Text>
