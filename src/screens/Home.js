@@ -1,17 +1,19 @@
+// Home.js
+
 import React, { useContext, useState, useEffect } from "react";
 import { View, Text, StyleSheet, StatusBar, Image, ScrollView, Alert, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ProfileButton from "../components/ProfileButton";
 import UserList from "../components/UserList";
 import { AuthConstext } from "../context/AuthProvider";
-import { onSnapshot, collection, doc, getDoc } from "firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL, onSnapshot, collection, doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/firebase.config";
 import { useTheme } from '../context/ThemeProvider';
 // import * as ImagePicker from 'expo-image-picker';
 // import { uploadImage } from "../firebase/firebaseStorage";
 
 export default function Home({ navigation }) {
-  const { logOut, user, currentUser, acceptFriendRequest, friends } = useContext(AuthConstext);
+  const { logOut, currentUser, acceptFriendRequest, friends } = useContext(AuthConstext);
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
   const [friendRequests, setFriendRequests] = useState([]);
@@ -23,10 +25,10 @@ export default function Home({ navigation }) {
       setLoading(true);
       await logOut();
       Alert.alert("Log out", "Logged out successfully!");
-      setLoading(false);
     } catch (error) {
+      Alert.alert("Sign out", error.message);
+    } finally {
       setLoading(false);
-      Alert.alert("Sign in", error.message);
     }
   };
 
@@ -83,20 +85,20 @@ export default function Home({ navigation }) {
   //     quality: 1,
   //   });
 
-  //   if (!pickerResult.cancelled) {
-  //     console.log('Selected image URI: ', pickerResult.uri);
-  //     try {
-  //       const downloadURL = await uploadImage(pickerResult.uri, currentUser.uid);
-  //       console.log('Download URL: ', downloadURL);
-  //       Alert.alert("Success", "Avatar updated successfully!");
-  //     } catch (error) {
-  //       console.error('Error selecting image or uploading: ', error);
-  //       Alert.alert("Error", "Failed to update avatar.");
-  //     }
-  //   } else {
-  //     console.log('User cancelled image selection');
-  //   }
-  // };
+    if (!pickerResult.cancelled) {
+      console.log('Selected image URI: ', pickerResult.uri);
+      try {
+        const downloadURL = await uploadImage(pickerResult.uri, currentUser.uid);
+        console.log('Download URL: ', downloadURL);
+        Alert.alert("Success", "Avatar updated successfully!");
+      } catch (error) {
+        console.error('Error selecting image or uploading: ', error);
+        Alert.alert("Error", "Failed to update avatar.");
+      }
+    } else {
+      console.log('User cancelled image selection');
+    }
+  };
   
 
   return (
@@ -143,7 +145,6 @@ export default function Home({ navigation }) {
             }}
           >
             <ProfileButton bg="#0d0d0d" title="View Profile" onPress={() => navigation.navigate('Profile')} />
-
             <ProfileButton title="Friend List" onPress={() => navigation.navigate('FriendList')} />
           </View>
         </View>

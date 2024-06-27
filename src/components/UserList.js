@@ -28,20 +28,20 @@ export default function UserList({ users }) {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.navigate('UserProfile', { user: users })}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <View style={styles.imgContainer}>
-            <Image
-              source={require('../img/account.jpg')}
-              style={styles.img}
-              resizeMode='contain'
-            />
-          </View>
-          <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
-            {users?.name}
-          </Text>
+      {/* <TouchableOpacity onPress={() => navigation.navigate('UserProfile', { user: users })}> */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <View style={styles.imgContainer}>
+          <Image
+            source={require('../img/account.jpg')}
+            style={styles.img}
+            resizeMode='contain'
+          />
         </View>
-      </TouchableOpacity>
+        <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
+          {users?.name}
+        </Text>
+      </View>
+      {/* </TouchableOpacity> */}
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <TouchableOpacity onPress={chatHandler}>
           <View style={styles.iconButton}>
