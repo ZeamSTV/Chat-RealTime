@@ -71,19 +71,19 @@ export default function Home({ navigation }) {
     alert("Friend request accepted!");
   };
 
-  // const selectImage = async () => {
-  //   const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  const selectImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-  //   if (permissionResult.granted === false) {
-  //     alert("Permission to access camera roll is required!");
-  //     return;
-  //   }
+    if (permissionResult.granted === false) {
+      alert("Permission to access camera roll is required!");
+      return;
+    }
 
-  //   const pickerResult = await ImagePicker.launchImageLibraryAsync({
-  //     mediaTypes: ImagePicker.MediaTypeOptions.Images,
-  //     allowsEditing: true,
-  //     quality: 1,
-  //   });
+    const pickerResult = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
+    });
 
     if (!pickerResult.cancelled) {
       console.log('Selected image URI: ', pickerResult.uri);
@@ -99,7 +99,7 @@ export default function Home({ navigation }) {
       console.log('User cancelled image selection');
     }
   };
-  
+
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.backgroundColor }}>
@@ -115,10 +115,10 @@ export default function Home({ navigation }) {
                 />
               </TouchableOpacity> */}
               <Image
-                  source={("../img/account.jpg")}
-                  style={styles.img}
-                  resizeMode="contain"
-                />
+                source={("../img/account.jpg")}
+                style={styles.img}
+                resizeMode="contain"
+              />
             </View>
             <View style={styles.headerText}>
               <Text style={[styles.title, { color: theme.textColor }]}>{currentUser?.name}</Text>

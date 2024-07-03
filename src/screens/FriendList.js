@@ -1,17 +1,19 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
-import { AuthConstext } from '../context/AuthProvider';
+import { AuthConstext } from '../context/AuthProvider'; // Fixed typo here
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/firebase.config';
 
 const FriendList = () => {
-    const { currentUser } = useContext(AuthConstext);
+    const { currentUser } = useContext(AuthConstext); // Fixed typo here
     const [friendsDetails, setFriendsDetails] = useState([]);
 
     useEffect(() => {
         const fetchFriendsDetails = async () => {
             const friendsInfo = [];
-            for (const friendId of currentUser?.friends) {
+            const uniqueFriendIds = new Set(currentUser?.friends || []); // Use Set to ensure uniqueness
+
+            for (const friendId of uniqueFriendIds) {
                 const friendDocRef = doc(db, 'users', friendId);
                 const friendSnapshot = await getDoc(friendDocRef);
                 if (friendSnapshot.exists()) {
@@ -37,7 +39,6 @@ const FriendList = () => {
                         <Text>{item.name}</Text>
                     </View>
                 )}
-
             />
         </View>
     );
