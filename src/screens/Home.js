@@ -1,5 +1,3 @@
-// Home.js
-
 import React, { useContext, useState, useEffect } from "react";
 import { View, Text, StyleSheet, StatusBar, Image, ScrollView, Alert, TouchableOpacity } from "react-native";
 import { Icon } from 'react-native-elements';
@@ -7,20 +5,19 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import ProfileButton from "../components/ProfileButton";
 import UserList from "../components/UserList";
 import { AuthConstext } from "../context/AuthProvider";
-import { onSnapshot, collection, doc, getDoc } from "firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL, onSnapshot, collection, doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/firebase.config";
 import { useTheme } from '../context/ThemeProvider';
 import * as ImagePicker from 'expo-image-picker';
 import { uploadImage } from "../firebase/firebaseStorage";
 
 export default function Home({ navigation }) {
-  const { logOut, currentUser, acceptFriendRequest, friends,user } = useContext(AuthConstext);
+  const { logOut, currentUser, acceptFriendRequest, friends } = useContext(AuthConstext);
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
   const [friendRequests, setFriendRequests] = useState([]);
   const { theme } = useTheme();
   const [friendData, setFriendData] = useState([]);
-  const [profileImage, setProfileImage] = useState(null);
 
   const logOutHandler = async () => {
     try {
@@ -73,25 +70,24 @@ export default function Home({ navigation }) {
     alert("Friend request accepted!");
   };
 
-  // const selectImage = async () => {
-  //   const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  const selectImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-  //   if (permissionResult.granted === false) {
-  //     alert("Permission to access camera roll is required!");
-  //     return;
-  //   }
+    if (permissionResult.granted === false) {
+      alert("Permission to access camera roll is required!");
+      return;
+    }
 
-  //   const pickerResult = await ImagePicker.launchImageLibraryAsync({
-  //     mediaTypes: ImagePicker.MediaTypeOptions.Images,
-  //     allowsEditing: true,
-  //     quality: 1,
-  //   });
+    const pickerResult = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
+    });
 
-    if (!pickerResult.canceled) {
+    if (!pickerResult.cancelled) {
       console.log('Selected image URI: ', pickerResult.uri);
       try {
-        console.log(user.uid)
-        const downloadURL = await uploadImage(pickerResult.uri, user.uid);
+        const downloadURL = await uploadImage(pickerResult.uri, currentUser.uid);
         console.log('Download URL: ', downloadURL);
         Alert.alert("Success", "Avatar updated successfully!");
       } catch (error) {
@@ -102,7 +98,6 @@ export default function Home({ navigation }) {
       console.log('User cancelled image selection');
     }
   };
-  
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.backgroundColor }}>
@@ -111,24 +106,16 @@ export default function Home({ navigation }) {
           <View style={styles.headerBox}>
             <View style={styles.imgContainer}>
               <TouchableOpacity onPress={selectImage}>
-                 <Image
-                  source={profileImage ? { uri: profileImage } : require("../img/account.jpg")}
+                <Image
+                  source={currentUser?.avatar ? { uri: currentUser.avatar } : require("../img/account.jpg")}
                   style={styles.img}
                   resizeMode="contain"
                 />
-              </TouchableOpacity> */}
-              <Image
-                  source={("../img/account.jpg")}
-                  style={styles.img}
-                  resizeMode="contain"
-                />
+              </TouchableOpacity>
             </View>
             <View style={styles.headerText}>
-              <Text style={[styles.title1, { color: theme.textColor }]}>Welcome Back!</Text>
-              <Text style={[styles.title, { color: theme.textColor }]}>{currentUser?.name}</Text>
-              {/* <Text style={[styles.text, { color: theme.textColor }]}>{currentUser?.address}</Text>
-              <Text style={[styles.text, { color: theme.textColor }]}>{currentUser?.gender}</Text>
-              <Text style={[styles.text, { color: theme.textColor }]}>{currentUser?.email}</Text> */}
+              <Text style={styles.welcome}>Welcome back!</Text>
+              <Text style={styles.title}>{currentUser?.name}</Text>
               <View style={{ marginVertical: 10 }}>
                 <ProfileButton
                   onPress={logOutHandler}
@@ -160,11 +147,9 @@ export default function Home({ navigation }) {
               const requester = users.find((user) => user.id === requestId);
               return (
                 <View key={requestId} style={styles.friendRequest}>
-                  <Text style={{ fontSize: 15, fontWeight: 'bold' }}>{requester?.name}</Text>
+                  <Text style={styles.friendRequestName}>{requester?.name}</Text>
                   <TouchableOpacity onPress={() => handleAcceptFriendRequest(requestId)}>
-                    <View style={styles.iconButton}>
-                      <Icon name='check-circle-o' type='font-awesome' color='black' />
-                    </View>
+                    <Icon style={styles.acceptFriendRequest}raised reverse name='check' type='font-awesome' color='#66cc33' size={15} />
                   </TouchableOpacity>
                 </View>
               );
@@ -175,7 +160,6 @@ export default function Home({ navigation }) {
         </View>
 
         <View style={{ flex: 1, paddingVertical: 5 }}>
-          <Text style={[styles.title, { color: theme.textColor }]}>Message List</Text>
           <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
             {users &&
               users.map((x) => (
@@ -203,11 +187,17 @@ const styles = StyleSheet.create({
     height: 230,
     backgroundColor: "#e8e8f1",
     paddingHorizontal: 5,
-    borderRadius: 5,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
   },
-headerBox: {
+  headerBox: {
     width: "100%",
     height: 150,
     flexDirection: "row",
@@ -220,32 +210,46 @@ headerBox: {
     backgroundColor: "white",
     borderRadius: 100,
     overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
   },
   img: {
     width: "100%",
     height: "100%",
-    objectFit: "contain",
   },
   headerText: {},
-  title1: {
-    color: "black",
-    fontSize: 15,
+  welcome: {
+    fontSize: 22,
+    fontWeight: "600",
+    marginBottom: 5,
   },
   title: {
     color: "black",
     fontSize: 20,
     fontWeight: "bold",
   },
-  text: {
+  friendRequestName: {
     color: "black",
-    fontSize: 10,
+    fontSize: 20,
+    fontWeight: "bold",
   },
   friendRequest: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 10,
     padding: 10,
-    backgroundColor: '#e8e8f1',
+    backgroundColor: '#f8f8f8',
     borderRadius: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  acceptFriendRequest: {
+
   },
 });
