@@ -43,11 +43,13 @@ export default function UserList({ users }) {
       </View>
       {/* </TouchableOpacity> */}
       <View style={{ flexDirection: 'row', gap: 10 }}>
-        <TouchableOpacity onPress={chatHandler}>
-          <View style={styles.iconButton}>
-            <Icon raised reverse name='pencil' type='font-awesome' color='#000' />
-          </View>
-        </TouchableOpacity>
+        {isFriend && (
+          <TouchableOpacity onPress={chatHandler}>
+            <View style={styles.iconButton}>
+              <Icon raised reverse name='comments-o' type='font-awesome' color='#000' />
+            </View>
+          </TouchableOpacity>
+        )}
         {!isFriend && (
           <TouchableOpacity onPress={handleSendFriendRequest}>
             <View style={styles.iconButton}>
@@ -85,8 +87,8 @@ const styles = StyleSheet.create({
     objectFit: 'contain',
   },
   iconButton: {
-    width: 40,
-    height: 40,
+    width: 60,
+    height: 60,
     alignItems: 'center',
     justifyContent: 'center',
   },

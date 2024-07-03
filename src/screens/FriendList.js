@@ -1,12 +1,14 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ScrollView } from 'react-native';
 import { AuthConstext } from '../context/AuthProvider';
-import { doc, getDoc } from 'firebase/firestore';
+import { onSnapshot, collection, doc, getDoc } from "firebase/firestore";
 import { db } from '../firebase/firebase.config';
 
 const FriendList = () => {
-    const { currentUser } = useContext(AuthConstext);
+    const { currentUser, friends, user } = useContext(AuthConstext);
     const [friendsDetails, setFriendsDetails] = useState([]);
+    const [users, setUsers] = useState([]);
+    const [friendData, setFriendData] = useState([]);
 
     useEffect(() => {
         const fetchFriendsDetails = async () => {
@@ -26,6 +28,22 @@ const FriendList = () => {
         }
     }, [currentUser]);
 
+  useEffect(() => {
+    const fetchFriendData = async () => {
+      const friendInfo = [];
+
+      for (const friendId of friends) {
+        const friendDocRef = doc(db, "users", friendId);
+        const friendSnapshot = await getDoc(friendDocRef);
+        const friend = friendSnapshot.data();
+        friendInfo.push(friend);
+      }
+
+      setFriendData(friendInfo);
+    };
+
+    fetchFriendData();
+  }, [friends]);
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Friend List</Text>
@@ -37,8 +55,17 @@ const FriendList = () => {
                         <Text>{item.name}</Text>
                     </View>
                 )}
-
             />
+            <View style={{ flex: 1, paddingVertical: 5 }}>
+                <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+                    {users &&
+                    users.map((x) => (
+                        <View key={x?.id}>
+                        <UserList users={x} />
+                        </View>
+                    ))}
+                </ScrollView>
+            </View>
         </View>
     );
 };

@@ -12,15 +12,17 @@ const themes = {
         buttonBackgroundColor: '#007bff',
         buttonTextColor: '#ffffff',
         colorButtonBackgroundColor: '#ddd',
+        headerColor: '#e8e8f1',
     },
     night: {
         backgroundColor: '#1c1c1c',
         textColor: '#ffffff',
         inputBackgroundColor: '#333333',
         inputTextColor: '#ffffff',
-        buttonBackgroundColor: '#1c1c1c',
+        buttonBackgroundColor: '#ff6600',
         buttonTextColor: '#ffffff',
         colorButtonBackgroundColor: '#555555',
+        headerColor: '#ff6600',
     },
 };
 

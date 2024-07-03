@@ -2,23 +2,25 @@
 
 import React, { useContext, useState, useEffect } from "react";
 import { View, Text, StyleSheet, StatusBar, Image, ScrollView, Alert, TouchableOpacity } from "react-native";
+import { Icon } from 'react-native-elements';
 import { SafeAreaView } from "react-native-safe-area-context";
 import ProfileButton from "../components/ProfileButton";
 import UserList from "../components/UserList";
 import { AuthConstext } from "../context/AuthProvider";
-import { getStorage, ref, uploadBytes, getDownloadURL, onSnapshot, collection, doc, getDoc } from "firebase/firestore";
+import { onSnapshot, collection, doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/firebase.config";
 import { useTheme } from '../context/ThemeProvider';
-// import * as ImagePicker from 'expo-image-picker';
-// import { uploadImage } from "../firebase/firebaseStorage";
+import * as ImagePicker from 'expo-image-picker';
+import { uploadImage } from "../firebase/firebaseStorage";
 
 export default function Home({ navigation }) {
-  const { logOut, currentUser, acceptFriendRequest, friends } = useContext(AuthConstext);
+  const { logOut, currentUser, acceptFriendRequest, friends,user } = useContext(AuthConstext);
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
   const [friendRequests, setFriendRequests] = useState([]);
   const { theme } = useTheme();
   const [friendData, setFriendData] = useState([]);
+  const [profileImage, setProfileImage] = useState(null);
 
   const logOutHandler = async () => {
     try {
@@ -71,24 +73,20 @@ export default function Home({ navigation }) {
     alert("Friend request accepted!");
   };
 
-  // const selectImage = async () => {
-  //   const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  const selectImage = async () => {
+    const pickerResult = await ImagePicker.launchImageLibraryAsync({
+      //mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
+    });
 
-  //   if (permissionResult.granted === false) {
-  //     alert("Permission to access camera roll is required!");
-  //     return;
-  //   }
+    console.log({ pickerResult });
 
-  //   const pickerResult = await ImagePicker.launchImageLibraryAsync({
-  //     mediaTypes: ImagePicker.MediaTypeOptions.Images,
-  //     allowsEditing: true,
-  //     quality: 1,
-  //   });
-
-    if (!pickerResult.cancelled) {
+    if (!pickerResult.canceled) {
       console.log('Selected image URI: ', pickerResult.uri);
       try {
-        const downloadURL = await uploadImage(pickerResult.uri, currentUser.uid);
+        console.log(user.uid)
+        const downloadURL = await uploadImage(pickerResult.uri, user.uid);
         console.log('Download URL: ', downloadURL);
         Alert.alert("Success", "Avatar updated successfully!");
       } catch (error) {
@@ -99,7 +97,6 @@ export default function Home({ navigation }) {
       console.log('User cancelled image selection');
     }
   };
-  
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.backgroundColor }}>
@@ -107,24 +104,20 @@ export default function Home({ navigation }) {
         <View style={styles.header}>
           <View style={styles.headerBox}>
             <View style={styles.imgContainer}>
-              {/* <TouchableOpacity onPress={selectImage}>
-                <Image
-                  source={currentUser?.avatar ? { uri: currentUser.avatar } : require("../img/account.jpg")}
+              <TouchableOpacity onPress={selectImage}>
+                 <Image
+                  source={profileImage ? { uri: profileImage } : require("../img/account.jpg")}
                   style={styles.img}
                   resizeMode="contain"
                 />
-              </TouchableOpacity> */}
-              <Image
-                  source={("../img/account.jpg")}
-                  style={styles.img}
-                  resizeMode="contain"
-                />
+              </TouchableOpacity>
             </View>
             <View style={styles.headerText}>
+              <Text style={[styles.title1, { color: theme.textColor }]}>Welcome Back!</Text>
               <Text style={[styles.title, { color: theme.textColor }]}>{currentUser?.name}</Text>
-              <Text style={[styles.text, { color: theme.textColor }]}>{currentUser?.address}</Text>
+              {/* <Text style={[styles.text, { color: theme.textColor }]}>{currentUser?.address}</Text>
               <Text style={[styles.text, { color: theme.textColor }]}>{currentUser?.gender}</Text>
-              <Text style={[styles.text, { color: theme.textColor }]}>{currentUser?.email}</Text>
+              <Text style={[styles.text, { color: theme.textColor }]}>{currentUser?.email}</Text> */}
               <View style={{ marginVertical: 10 }}>
                 <ProfileButton
                   onPress={logOutHandler}
@@ -156,9 +149,11 @@ export default function Home({ navigation }) {
               const requester = users.find((user) => user.id === requestId);
               return (
                 <View key={requestId} style={styles.friendRequest}>
-                  <Text style={{ color: theme.textColor }}>{requester?.name}</Text>
+                  <Text style={{ fontSize: 15, fontWeight: 'bold' }}>{requester?.name}</Text>
                   <TouchableOpacity onPress={() => handleAcceptFriendRequest(requestId)}>
-                    <Text style={{ color: "blue" }}>Accept</Text>
+                    <View style={styles.iconButton}>
+                      <Icon name='check-circle-o' type='font-awesome' color='black' />
+                    </View>
                   </TouchableOpacity>
                 </View>
               );
@@ -169,6 +164,7 @@ export default function Home({ navigation }) {
         </View>
 
         <View style={{ flex: 1, paddingVertical: 5 }}>
+          <Text style={[styles.title, { color: theme.textColor }]}>Message List</Text>
           <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
             {users &&
               users.map((x) => (
@@ -200,7 +196,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  headerBox: {
+headerBox: {
     width: "100%",
     height: 150,
     flexDirection: "row",
@@ -220,20 +216,25 @@ const styles = StyleSheet.create({
     objectFit: "contain",
   },
   headerText: {},
+  title1: {
+    color: "black",
+    fontSize: 15,
+  },
   title: {
     color: "black",
-    fontSize: 30,
+    fontSize: 20,
     fontWeight: "bold",
   },
   text: {
     color: "black",
+    fontSize: 10,
   },
   friendRequest: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 10,
     padding: 10,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#e8e8f1',
     borderRadius: 5,
   },
 });
