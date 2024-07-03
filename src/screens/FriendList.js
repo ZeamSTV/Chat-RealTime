@@ -1,11 +1,11 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { AuthConstext } from '../context/AuthProvider';
-import { onSnapshot, collection, doc, getDoc } from "firebase/firestore";
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/firebase.config';
 
 const FriendList = () => {
-    const { currentUser, friends, user } = useContext(AuthConstext);
+    const { currentUser } = useContext(AuthConstext);
     const [friendsDetails, setFriendsDetails] = useState([]);
     const [users, setUsers] = useState([]);
     const [friendData, setFriendData] = useState([]);
@@ -13,7 +13,9 @@ const FriendList = () => {
     useEffect(() => {
         const fetchFriendsDetails = async () => {
             const friendsInfo = [];
-            for (const friendId of currentUser?.friends) {
+            const uniqueFriendIds = new Set(currentUser?.friends || []); // Use Set to ensure uniqueness
+
+            for (const friendId of uniqueFriendIds) {
                 const friendDocRef = doc(db, 'users', friendId);
                 const friendSnapshot = await getDoc(friendDocRef);
                 if (friendSnapshot.exists()) {
